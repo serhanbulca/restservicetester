@@ -1,0 +1,15 @@
+directories:
+  output: dist_electron
+  buildResources: build
+appId: com.serhanbulca.apitester
+productName: Modern API Tester
+files:
+  - filter:
+      - dist/**/*
+      - main.cjs
+      - preload.cjs
+      - icon.png
+win:
+  target: portable
+  icon: icon.png
+electronVersion: 30.5.1

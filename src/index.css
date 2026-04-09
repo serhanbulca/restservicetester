@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================
+   ÖZEL SCROLLBAR (KAYDIRMA ÇUBUĞU) TASARIMI
+   Electron (Chromium) ve Webkit tarayıcılar için
+   ========================================================= */
+
+/* Scrollbar'ın genel kalınlığı */
+::-webkit-scrollbar {
+  width: 10px;  /* Dikey kaydırma çubuğu genişliği */
+  height: 10px; /* Yatay kaydırma çubuğu yüksekliği */
+}
+
+/* Scrollbar'ın arka plan yolu (Koyu temanın arka planına uygun) */
+::-webkit-scrollbar-track {
+  background: #1e1e1e;
+  border-left: 1px solid #2a2a2b; /* Arayüzle karışmaması için ince bir sınır */
+}
+
+/* Scrollbar'ın tutulan kısmı (Thumb) */
+::-webkit-scrollbar-thumb {
+  background: #424242; /* Şık, mat bir gri */
+  border-radius: 6px;  /* Kenarları yuvarlatılmış modern görünüm */
+  border: 2px solid #1e1e1e; /* Etrafında boşluk varmış hissi yaratır (padding trick) */
+}
+
+/* Fare ile üzerine gelindiğinde */
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a; /* Biraz daha parlak gri */
+}
+
+/* Tıklandığında/Sürüklendiğinde */
+::-webkit-scrollbar-thumb:active {
+  background: #7a7a7a;
+}
+
+/* Firefox için yedek destek (Electron'da gerekmese de web için iyi bir standarttır) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #424242 #1e1e1e;
+}
