@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 // =====================================================================
 // ÖZEL BİLEŞEN: GENİŞLEYEBİLİR JSON AĞACI (Recursive JSON Viewer)
@@ -84,6 +84,10 @@ export default function App() {
   const [projects, setProjects] = useState<string[]>([]);
   const [currentProject, setCurrentProject] = useState<string | null>(null);
   const [projectData, setProjectData] = useState<{endpoints: string[], requests: any[]}>({ endpoints: [], requests: [] });
+  const projectDataRef = useRef(projectData);
+  projectDataRef.current = projectData;
+
+  const [selectedRequestName, setSelectedRequestName] = useState("");
 
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [projectNameInput, setProjectNameInput] = useState("");
@@ -100,10 +104,95 @@ export default function App() {
   const isDragging = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const [sidebarWidthPx, setSidebarWidthPx] = useState(256);
+  const isDraggingSidebar = useRef(false);
+  const rootLayoutRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     // @ts-ignore
     window.api.getProjects().then((list: string[]) => setProjects(list));
   }, []);
+
+  const normalizeUrl = (s: string) => s.trim();
+
+  /** URL kutusu datalist: hem endpoints hem kayıtlı isteklerdeki url'ler (projede eksik endpoints olsa bile). */
+  const urlDatalistOptions = useMemo(() => {
+    const seen = new Set<string>();
+    for (const ep of projectData.endpoints ?? []) {
+      const t = normalizeUrl(ep);
+      if (t) seen.add(t);
+    }
+    for (const r of projectData.requests ?? []) {
+      const t = normalizeUrl(r?.url ?? "");
+      if (t) seen.add(t);
+    }
+    return [...seen].sort((a, b) => a.localeCompare(b));
+  }, [projectData.endpoints, projectData.requests]);
+
+  /** Combo: yalnızca tam olarak projedeki bir adresle eşleşince seçili görünür; elle yazılan özel URL’de boş kalır. */
+  const endpointPickerValue = useMemo(() => {
+    const u = normalizeUrl(url);
+    return u && urlDatalistOptions.includes(u) ? u : "";
+  }, [url, urlDatalistOptions]);
+
+  /** Gönderimde yalnızca endpoints listesine URL ekler; kayıtlı istek (requests) oluşturmaz. */
+  const syncUrlToEndpointsOnly = async () => {
+    if (!currentProject || !url.trim()) return;
+    const u = normalizeUrl(url);
+    const prev = projectDataRef.current;
+    const already = prev.endpoints.some((e) => normalizeUrl(e) === u);
+    if (already) return;
+    const newData = { ...prev, endpoints: [...prev.endpoints, u] };
+    // @ts-ignore
+    await window.api.saveProject(currentProject, newData);
+    setProjectData(newData);
+    projectDataRef.current = newData;
+  };
+
+  const deleteCurrentEndpoint = async () => {
+    if (!currentProject) return;
+    const u = normalizeUrl(url);
+    if (!u) return;
+    const prev = projectDataRef.current;
+    const newEndpoints = prev.endpoints.filter((e) => normalizeUrl(e) !== u);
+    const newRequests = prev.requests.filter((r) => normalizeUrl(r?.url ?? "") !== u);
+    const newData = { ...prev, endpoints: newEndpoints, requests: newRequests };
+    // @ts-ignore
+    await window.api.saveProject(currentProject, newData);
+    setProjectData(newData);
+    projectDataRef.current = newData;
+
+    const nextUrls: string[] = [];
+    const seen = new Set<string>();
+    for (const ep of newData.endpoints) {
+      const t = normalizeUrl(ep);
+      if (t && !seen.has(t)) {
+        seen.add(t);
+        nextUrls.push(t);
+      }
+    }
+    for (const r of newData.requests) {
+      const t = normalizeUrl(r?.url ?? "");
+      if (t && !seen.has(t)) {
+        seen.add(t);
+        nextUrls.push(t);
+      }
+    }
+    nextUrls.sort((a, b) => a.localeCompare(b));
+    const nextUrl = nextUrls[0] ?? "";
+    setUrl(nextUrl);
+    if (nextUrl) {
+      const req = newData.requests.find((r) => normalizeUrl(r?.url ?? "") === nextUrl);
+      if (req) loadSavedRequest(req);
+      else setSelectedRequestName("");
+    } else {
+      setSelectedRequestName("");
+      setMethod("GET");
+      setBody("{\n  \n}");
+      setAuth({ type: "Gerekmiyor", data: {} });
+      setTimeoutVal("10");
+    }
+  };
 
   // --- SÜRÜKLEME (RESIZE) FONKSİYONLARI ---
   const handleMouseMove = (e: MouseEvent) => {
@@ -135,6 +224,31 @@ export default function App() {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handleSidebarMouseMove = (e: MouseEvent) => {
+    if (!isDraggingSidebar.current || !rootLayoutRef.current) return;
+    const rect = rootLayoutRef.current.getBoundingClientRect();
+    const w = e.clientX - rect.left;
+    const minW = 160;
+    const mainMin = 320;
+    const maxW = Math.max(minW, rect.width - mainMin);
+    const clamped = Math.max(minW, Math.min(maxW, w));
+    setSidebarWidthPx(clamped);
+  };
+
+  const handleSidebarMouseUp = () => {
+    isDraggingSidebar.current = false;
+    document.body.style.cursor = "default";
+    document.removeEventListener("mousemove", handleSidebarMouseMove);
+    document.removeEventListener("mouseup", handleSidebarMouseUp);
+  };
+
+  const handleSidebarMouseDown = () => {
+    isDraggingSidebar.current = true;
+    document.body.style.cursor = "col-resize";
+    document.addEventListener("mousemove", handleSidebarMouseMove);
+    document.addEventListener("mouseup", handleSidebarMouseUp);
+  };
+
   // --- PROJE FONKSİYONLARI ---
   const confirmCreateProject = async () => {
     if (!projectNameInput || projectNameInput.trim() === "") return;
@@ -155,16 +269,36 @@ export default function App() {
   const handleLoadProject = async (name: string) => {
     setCurrentProject(name);
     // @ts-ignore
-    const data = await window.api.loadProject(name);
-    setProjectData(data);
+    const raw = await window.api.loadProject(name);
+    const data = {
+      endpoints: Array.isArray(raw?.endpoints) ? raw.endpoints : [],
+      requests: Array.isArray(raw?.requests) ? raw.requests : [],
+    };
+    const urlSet = new Set<string>();
+    for (const ep of data.endpoints) {
+      const t = normalizeUrl(ep);
+      if (t) urlSet.add(t);
+    }
+    for (const r of data.requests) {
+      const t = normalizeUrl(r?.url ?? "");
+      if (t) urlSet.add(t);
+    }
+    const mergedEndpoints = [...urlSet].sort((a, b) => a.localeCompare(b));
+    const needsEndpointSync =
+      mergedEndpoints.length !== data.endpoints.length ||
+      mergedEndpoints.some((u, i) => u !== normalizeUrl(data.endpoints[i] ?? ""));
+    const dataToUse = needsEndpointSync ? { ...data, endpoints: mergedEndpoints } : data;
+    setProjectData(dataToUse);
+    projectDataRef.current = dataToUse;
+    if (needsEndpointSync) {
+      // @ts-ignore
+      void window.api.saveProject(name, dataToUse);
+    }
     
     if (data.requests && data.requests.length > 0) {
       loadSavedRequest(data.requests[0]);
     } else {
-      setUrl("");
-      setBody("{\n  \n}");
-      setAuth({ type: "Gerekmiyor", data: {} });
-      setTimeoutVal("10");
+      clearFormToDefault();
     }
   };
 
@@ -188,11 +322,14 @@ export default function App() {
     // @ts-ignore
     await window.api.saveProject(currentProject, newData);
     setProjectData(newData);
+    projectDataRef.current = newData;
+    setSelectedRequestName(newReq.name);
     setShowRequestModal(false);
     setRequestNameInput("");
   };
 
   const loadSavedRequest = (req: any) => {
+    setSelectedRequestName(req.name || "");
     setMethod(req.method || "GET");
     setUrl(req.url || "");
     setBody(req.body || "{\n  \n}");
@@ -200,12 +337,45 @@ export default function App() {
     setTimeoutVal(req.timeout || "10");
   };
 
+  const clearFormToDefault = () => {
+    setSelectedRequestName("");
+    setUrl("");
+    setBody("{\n  \n}");
+    setAuth({ type: "Gerekmiyor", data: {} });
+    setTimeoutVal("10");
+  };
+
+  const deleteSelectedSavedRequest = async () => {
+    if (!currentProject || !selectedRequestName) return;
+    const prev = projectDataRef.current;
+    const idx = prev.requests.findIndex((r) => r.name === selectedRequestName);
+    if (idx < 0) return;
+    const newRequests = prev.requests.filter((r) => r.name !== selectedRequestName);
+    const newData = { ...prev, requests: newRequests };
+    // @ts-ignore
+    await window.api.saveProject(currentProject, newData);
+    setProjectData(newData);
+    projectDataRef.current = newData;
+
+    if (newRequests.length === 0) {
+      clearFormToDefault();
+      return;
+    }
+    if (idx < newRequests.length) {
+      loadSavedRequest(newRequests[idx]);
+    } else {
+      loadSavedRequest(newRequests[idx - 1]);
+    }
+  };
+
   const handleSend = async () => {
     if (!url) return;
     setIsLoading(true);
     setStatus("Status: Gönderiliyor...");
     setResponse(null);
-
+    if (currentProject) {
+      await syncUrlToEndpointsOnly();
+    }
     try {
       let finalUrl = url;
       let customHeaders: any = {};
@@ -259,7 +429,10 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#1e1e1e] text-gray-200 font-sans selection:bg-blue-500/30 relative overflow-hidden">
+    <div
+      ref={rootLayoutRef}
+      className="flex h-screen bg-[#1e1e1e] text-gray-200 font-sans selection:bg-blue-500/30 relative overflow-hidden"
+    >
       
       {/* ================= MODALLAR BURADA (Aynı kalıyor) ================= */}
       {showProjectModal && (
@@ -334,33 +507,45 @@ export default function App() {
       )}
 
       {/* ================= SOL SIDEBAR ================= */}
-      <div className="w-64 bg-[#252526] border-r border-[#333333] flex flex-col shrink-0">
-        <div className="p-5 border-b border-[#333333]">
+      <div
+        className="bg-[#252526] flex flex-col shrink-0 min-w-[160px] overflow-hidden"
+        style={{ width: sidebarWidthPx }}
+      >
+        <div className="p-5 border-b border-[#333333] shrink-0">
           <h1 className="text-xl font-bold tracking-wide text-gray-100">
             <span className="text-blue-500">API</span> Tester
           </h1>
         </div>
-        
-        <div className="p-4">
+
+        <div className="p-4 shrink-0">
           <button onClick={() => { setProjectNameInput(""); setShowProjectModal(true); }} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded transition-colors shadow-sm">
             + Yeni Proje
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2 space-y-1 min-h-0">
           {projects.length === 0 ? (
              <div className="text-xs text-gray-500 text-center mt-4">Henüz proje yok</div>
           ) : (
             projects.map((proj) => (
               <div 
                 key={proj} onClick={() => handleLoadProject(proj)}
-                className={`px-3 py-2 rounded cursor-pointer text-sm font-medium transition-colors ${currentProject === proj ? 'bg-[#37373d] text-blue-400 border-l-2 border-blue-500' : 'hover:bg-[#2d2d2d] text-gray-400'}`}
+                className={`px-3 py-2 rounded cursor-pointer text-sm font-medium transition-colors truncate ${currentProject === proj ? 'bg-[#37373d] text-blue-400 border-l-2 border-blue-500' : 'hover:bg-[#2d2d2d] text-gray-400'}`}
+                title={proj}
               >
                 {proj}
               </div>
             ))
           )}
         </div>
+      </div>
+
+      <div
+        className="w-1.5 shrink-0 bg-[#333333] hover:bg-blue-500 cursor-col-resize flex flex-col justify-center items-center group transition-colors z-20"
+        onMouseDown={handleSidebarMouseDown}
+        title="Proje listesi genişliği"
+      >
+        <div className="h-10 w-0.5 bg-gray-500 group-hover:bg-white rounded" />
       </div>
 
       {/* ================= SAĞ ANA EKRAN ================= */}
@@ -372,21 +557,105 @@ export default function App() {
             <span className="text-sm font-bold text-yellow-500">
               {currentProject ? `${currentProject}` : "Lütfen bir proje seçin"}
             </span>
-            {currentProject && projectData.requests.length > 0 && (
-              <select className="bg-[#2d2d2d] border border-[#3c3c3c] text-gray-300 text-sm rounded px-3 py-1 outline-none" onChange={(e) => { const req = projectData.requests.find(r => r.name === e.target.value); if (req) loadSavedRequest(req); }}>
-                <option value="">-- Kayıtlı İstek Seç --</option>
-                {projectData.requests.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
-              </select>
+            {currentProject && (
+              <div className="flex items-center gap-1 shrink-0">
+                <select
+                  className="bg-[#2d2d2d] border border-[#3c3c3c] text-gray-300 text-sm rounded px-3 py-1 outline-none max-w-[min(28rem,50vw)]"
+                  value={
+                    selectedRequestName &&
+                    projectData.requests.some((r) => r.name === selectedRequestName)
+                      ? selectedRequestName
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSelectedRequestName(v);
+                    const req = projectData.requests.find((r) => r.name === v);
+                    if (req) loadSavedRequest(req);
+                  }}
+                >
+                  <option value="">-- Kayıtlı İstek Seç --</option>
+                  {projectData.requests.map((r) => (
+                    <option key={r.name} value={r.name}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => void deleteSelectedSavedRequest()}
+                  disabled={
+                    !selectedRequestName ||
+                    !projectData.requests.some((r) => r.name === selectedRequestName)
+                  }
+                  className="shrink-0 px-2 py-1 rounded border border-[#3c3c3c] bg-[#2d2d2d] text-red-400 hover:bg-[#3d3d3d] disabled:opacity-40 disabled:pointer-events-none text-sm leading-none"
+                  title="İstek sil"
+                >
+                  🗑
+                </button>
+              </div>
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <select className="bg-[#2d2d2d] border border-[#3c3c3c] text-green-400 font-bold rounded px-4 py-2.5 outline-none focus:border-blue-500 w-28 appearance-none" value={method} onChange={(e) => setMethod(e.target.value)}>
+          <div className="flex items-center gap-3 flex-wrap">
+            <select className="bg-[#2d2d2d] border border-[#3c3c3c] text-green-400 font-bold rounded px-4 py-2.5 outline-none focus:border-blue-500 w-28 appearance-none shrink-0" value={method} onChange={(e) => setMethod(e.target.value)}>
               <option value="GET">GET</option><option value="POST" className="text-yellow-400">POST</option><option value="PUT" className="text-blue-400">PUT</option><option value="DELETE" className="text-red-400">DELETE</option><option value="PATCH" className="text-orange-400">PATCH</option>
             </select>
 
-            <input type="text" placeholder="https://api.example.com/v1/users" className="flex-1 bg-[#181818] border border-[#3c3c3c] rounded px-4 py-2.5 outline-none focus:border-blue-500 text-gray-100 font-mono text-sm" value={url} onChange={(e) => setUrl(e.target.value)} list="endpoints" />
-            <datalist id="endpoints">{projectData.endpoints.map(ep => <option key={ep} value={ep} />)}</datalist>
+            {currentProject ? (
+              <>
+                <select
+                  className="shrink-0 w-[min(17rem,34vw)] max-w-full bg-[#181818] border border-[#3c3c3c] text-amber-300/95 text-xs font-mono rounded px-2 py-2.5 outline-none focus:border-amber-500"
+                  title="Projede kayıtlı endpoint adresleri"
+                  value={endpointPickerValue}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (!v) return;
+                    setUrl(v);
+                    const req = projectData.requests.find(
+                      (r) => normalizeUrl(r?.url ?? "") === normalizeUrl(v)
+                    );
+                    if (req) loadSavedRequest(req);
+                    else setSelectedRequestName("");
+                  }}
+                >
+                  <option value="">— Projede kayıtlı adres seç —</option>
+                  {urlDatalistOptions.map((ep) => (
+                    <option key={ep} value={ep} title={ep}>
+                      {ep.length > 48 ? `${ep.slice(0, 45)}…` : ep}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="URL (düzenlenebilir; projede yoksa odak çıkınca eklenir)"
+                  className="flex-1 min-w-[8rem] bg-[#181818] border border-[#3c3c3c] rounded px-4 py-2.5 outline-none focus:border-blue-500 text-gray-100 font-mono text-sm"
+                  title="Gönderilecek endpoint URL"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  onBlur={() => {
+                    void syncUrlToEndpointsOnly();
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => void deleteCurrentEndpoint()}
+                  disabled={!normalizeUrl(url)}
+                  className="shrink-0 px-2.5 py-2 rounded border border-[#3c3c3c] bg-[#2d2d2d] text-red-400 hover:bg-[#3d3d3d] disabled:opacity-40 disabled:pointer-events-none text-sm"
+                  title="Endpoint sil"
+                >
+                  🗑
+                </button>
+              </>
+            ) : (
+              <input
+                type="text"
+                placeholder="Önce proje seçin veya URL yazın"
+                className="flex-1 min-w-[12rem] bg-[#181818] border border-[#3c3c3c] rounded px-4 py-2.5 outline-none focus:border-blue-500 text-gray-100 font-mono text-sm"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+            )}
 
             <div className="flex flex-col items-center ml-2 mr-1">
               <span className="text-[10px] text-gray-500 uppercase font-bold">Timeout</span>

@@ -47,8 +47,9 @@
       "icon.png"
     ],
     "win": {
-      "target": "portable",
-      "icon": "icon.png"
+      "target": "dir",
+      "icon": "icon.png",
+      "signAndEditExecutable": false
     }
   }
 }
