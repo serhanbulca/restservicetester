@@ -1,15 +1,18 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
 // === UYGULAMA İSMİNİ ZORLA (DEV MODUNDA BİLE KENDİ KLASÖRÜNÜ AÇAR) ===
-app.setName('modern-http-tester');
+app.setName('Modern API Tester');
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1100,
     height: 800,
-	icon: path.join(__dirname, 'icon.png'),
+    minWidth: 800,
+    minHeight: 600,
+    title: 'Modern API Tester',
+    icon: path.join(__dirname, 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -26,8 +29,62 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // === MAC İÇİN MENÜ ÇUBUĞU ===
+  const template = [
+    {
+      label: 'Modern API Tester',
+      submenu: [
+        { role: 'about', label: 'Hakkında' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide', label: 'Gizle' },
+        { role: 'hideOthers', label: 'Diğerlerini Gizle' },
+        { role: 'unhide', label: 'Göster' },
+        { type: 'separator' },
+        { role: 'quit', label: 'Çıkış' }
+      ]
+    },
+    {
+      label: 'Düzen',
+      submenu: [
+        { role: 'undo', label: 'Geri Al' },
+        { role: 'redo', label: 'Yinele' },
+        { type: 'separator' },
+        { role: 'cut', label: 'Kes' },
+        { role: 'copy', label: 'Kopyala' },
+        { role: 'paste', label: 'Yapıştır' },
+        { role: 'selectAll', label: 'Tümünü Seç' }
+      ]
+    },
+    {
+      label: 'Görünüm',
+      submenu: [
+        { role: 'reload', label: 'Yeniden Yükle' },
+        { role: 'forceReload', label: 'Zorla Yeniden Yükle' },
+        { role: 'toggleDevTools', label: 'Geliştirici Araçları' },
+        { type: 'separator' },
+        { role: 'resetZoom', label: 'Yakınlaştırmayı Sıfırla' },
+        { role: 'zoomIn', label: 'Yakınlaştır' },
+        { role: 'zoomOut', label: 'Uzaklaştır' },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: 'Tam Ekran' }
+      ]
+    },
+    {
+      label: 'Pencere',
+      submenu: [
+        { role: 'minimize', label: 'Küçült' },
+        { role: 'zoom', label: 'Yakınlaştır' },
+        { role: 'close', label: 'Kapat' }
+      ]
+    }
+  ];
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+
   // === PROJE KLASÖRÜNÜ HAZIRLA ===
-  // İşletim sisteminin güvenli uygulama verileri klasörünü kullanıyoruz (Windows'ta AppData/Roaming)
+  // İşletim sisteminin güvenli uygulama verileri klasörünü kullanıyoruz
   const projectsDir = path.join(app.getPath('userData'), 'projects');
   if (!fs.existsSync(projectsDir)) {
     fs.mkdirSync(projectsDir, { recursive: true });
