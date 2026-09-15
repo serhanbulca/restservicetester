@@ -22,3 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+dist_electron/win-unpacked/Modern API Tester.exe
+build/icon.icns

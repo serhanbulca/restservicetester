@@ -94,7 +94,6 @@ app.whenReady().then(() => {
 
 // === 1. SINIRSIZ HTTP İSTEĞİ (CORS'U AŞMAK İÇİN) ===
   ipcMain.handle('make-request', async (event, { method, url, body, customHeaders, timeout }) => {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     const start = Date.now();
     
     // Timeout mekanizması için AbortController

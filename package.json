@@ -5,13 +5,14 @@
   "type": "module",
   "main": "main.cjs",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node ./node_modules/vite/bin/vite.js",
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "electron:dev": "node ./node_modules/electron/cli.js .",
     "dist": "npm run build && electron-builder",
     "dist:mac": "npm run build && electron-builder --mac --arm64",
     "dist:mac:x64": "npm run build && electron-builder --mac --x64",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "node ./node_modules/vite/bin/vite.js preview"
   },
   "dependencies": {
     "react": "^18.2.0",
