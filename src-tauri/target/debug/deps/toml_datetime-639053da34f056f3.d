@@ -1,0 +1,10 @@
+/Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/deps/toml_datetime-639053da34f056f3.d: /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/lib.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/datetime.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/de.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/ser.rs
+
+/Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/deps/libtoml_datetime-639053da34f056f3.rlib: /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/lib.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/datetime.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/de.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/ser.rs
+
+/Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/deps/libtoml_datetime-639053da34f056f3.rmeta: /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/lib.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/datetime.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/de.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/ser.rs
+
+/Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/lib.rs:
+/Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/datetime.rs:
+/Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/de.rs:
+/Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/toml_datetime-1.1.3+spec-1.1.0/src/ser.rs:

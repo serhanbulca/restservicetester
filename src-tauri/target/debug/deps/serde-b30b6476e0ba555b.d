@@ -1,0 +1,14 @@
+/Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/deps/serde-b30b6476e0ba555b.d: /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/build/serde-e0f4f7ca389bb973/out/private.rs
+
+/Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/deps/libserde-b30b6476e0ba555b.rlib: /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/build/serde-e0f4f7ca389bb973/out/private.rs
+
+/Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/deps/libserde-b30b6476e0ba555b.rmeta: /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/build/serde-e0f4f7ca389bb973/out/private.rs
+
+/Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs:
+/Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs:
+/Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs:
+/Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs:
+/Users/TCIBULCA/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs:
+/Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/build/serde-e0f4f7ca389bb973/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/TCIBULCA/Dev/github/restservicetester/src-tauri/target/debug/build/serde-e0f4f7ca389bb973/out

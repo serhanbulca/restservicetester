@@ -1,0 +1,17 @@
+[package]
+name = "modern-http-tester"
+version = "1.0.0"
+description = "Modern API Tester - Tauri & Rust"
+authors = ["Serhan Bulca"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+tokio = { version = "1", features = ["full"] }
+dirs = "5.0"
